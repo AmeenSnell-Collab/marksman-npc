@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SimulatedPaymentGateway() {
+function PaymentForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const appId = searchParams.get('appId');
@@ -131,5 +131,17 @@ export default function SimulatedPaymentGateway() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SimulatedPaymentGateway() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#64748b' }}>Loading secure payment portal...</p>
+      </div>
+    }>
+      <PaymentForm />
+    </Suspense>
   );
 }
