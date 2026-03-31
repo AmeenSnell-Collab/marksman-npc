@@ -14,6 +14,14 @@ export default async function MemberDashboard() {
     redirect('/login');
   }
 
+  // Fetch user role
+  const { data: dbUser } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  const isAdmin = dbUser?.role === 'ADMIN';
+
   // Fetch the user's applications from the database
   const { data: applications } = await supabase
     .from('applications')
@@ -52,6 +60,18 @@ export default async function MemberDashboard() {
         <LogoutButton />
       </div>
       
+      {isAdmin && (
+        <div className="card shadow-sm" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1.5rem', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ margin: 0, color: '#0f172a' }}>Administrator Portal</h3>
+            <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>Access tools to review, approve, and manage member applications.</p>
+          </div>
+          <a href="/admin/applications" className="btn btn-primary" style={{ background: '#0f172a', fontWeight: 600 }}>
+            Manage Applications →
+          </a>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
         
         {/* Application Status Widget */}
