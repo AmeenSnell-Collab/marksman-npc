@@ -79,6 +79,33 @@ export default async function MemberDashboard() {
               <p style={{ marginTop: '0.25rem', color: currentStatus.text, fontSize: '0.8rem', opacity: 0.7 }}>
                 Submitted: {new Date(latestApp.created_at).toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
+
+              {latestApp.status === 'APPROVED' && !membership && (
+                <div style={{ 
+                  marginTop: '1.5rem', 
+                  background: '#ffffff', 
+                  padding: '1.5rem', 
+                  borderRadius: 'var(--radius-md)', 
+                  border: '1px solid var(--border)',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '1.5rem' }}>💳</span>
+                    <h4 style={{ margin: 0, color: 'var(--text)' }}>Action Required: Complete Registration</h4>
+                  </div>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+                    Congratulations! Your application has been approved by our administrators. 
+                    To instantly activate your membership and receive your official Member Number, please proceed to the secure payment portal.
+                  </p>
+                  <a 
+                    href={`/payment?appId=${latestApp.id}`} 
+                    className="btn btn-primary" 
+                    style={{ display: 'inline-block', textDecoration: 'none', background: '#0f172a', fontWeight: 600 }}
+                  >
+                    Proceed to Payment Center →
+                  </a>
+                </div>
+              )}
             </div>
           ) : (
             <div style={{ 
