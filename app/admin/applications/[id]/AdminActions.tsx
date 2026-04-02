@@ -44,46 +44,54 @@ export default function AdminActions({ applicationId, initialStatus, initialNote
   };
 
   return (
-    <div className="card" style={{ background: 'var(--background)', alignSelf: 'start', position: 'sticky', top: '100px' }}>
-      <h3 style={{ marginBottom: '1rem' }}>Admin Actions</h3>
+    <div className="card shadow-float" style={{ 
+      position: 'sticky', 
+      bottom: '2rem', 
+      marginTop: '2rem',
+      background: 'rgba(255, 255, 255, 0.95)',
+      backdropFilter: 'blur(10px)',
+      border: '1px solid var(--border)',
+      zIndex: 20
+    }}>
+      <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+        
+        <div style={{ flex: 2 }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
+            Administrator Notes (Optional)
+          </label>
+          <textarea 
+            rows={2} 
+            placeholder="Feedback saved for internal review, or sent to user if info is requested."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            style={{ resize: 'none', background: 'var(--background)' }}
+          ></textarea>
+        </div>
 
-      <div className="form-group">
-        <label>Admin Notes (Will be sent in email if rejected/info requested)</label>
-        <textarea 
-          rows={4} 
-          placeholder="Enter reason for rejection or details for missing information..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        ></textarea>
-      </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', justifyContent: 'flex-end', paddingTop: '1.75rem' }}>
+          {status !== 'APPROVED' && (
+            <button 
+              className="btn btn-primary" 
+              style={{ background: 'var(--success)', border: 'none', width: '100%' }}
+              onClick={() => updateStatus('APPROVED')}
+              disabled={loading}
+            >
+              Approve Application
+            </button>
+          )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
-        <button 
-          className="btn btn-primary" 
-          style={{ background: 'var(--success)' }}
-          onClick={() => updateStatus('APPROVED')}
-          disabled={loading || status === 'APPROVED'}
-        >
-          ✓ Approve Application
-        </button>
+          {status !== 'REJECTED' && (
+            <button 
+              className="btn" 
+              style={{ border: '1px solid var(--error)', color: 'var(--error)', width: '100%', background: 'transparent' }}
+              onClick={() => updateStatus('REJECTED')}
+              disabled={loading}
+            >
+              Reject Application
+            </button>
+          )}
+        </div>
 
-        <button 
-          className="btn btn-primary" 
-          style={{ background: 'var(--info)' }}
-          onClick={() => updateStatus('INFO_REQUESTED')}
-          disabled={loading}
-        >
-          ℹ Request More Info
-        </button>
-
-        <button 
-          className="btn" 
-          style={{ border: '1px solid var(--error)', color: 'var(--error)' }}
-          onClick={() => updateStatus('REJECTED')}
-          disabled={loading || status === 'REJECTED'}
-        >
-          ✗ Reject Application
-        </button>
       </div>
     </div>
   );

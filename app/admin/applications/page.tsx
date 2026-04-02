@@ -11,15 +11,8 @@ export default async function AdminApplicationsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: dbUser } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (dbUser?.role !== 'ADMIN') {
-    redirect('/dashboard');
-  }
+  const { data: dbUser } = await supabase.from('users').select('role').eq('id', user.id).single();
+  if (dbUser?.role !== 'ADMIN') redirect('/dashboard');
 
   // Fetch all applications
   const { data: applications, error } = await supabase
@@ -28,53 +21,57 @@ export default async function AdminApplicationsPage() {
     .order('created_at', { ascending: false });
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '3rem 1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+    <div className="animate-fade-in" style={{ maxWidth: '1200px' }}>
+      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h2>Application Management</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-            Review pending memberships and manage statuses.
-          </p>
+          <h2 style={{ fontSize: '1.75rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>Application Pipeline</h2>
+          <p style={{ color: 'var(--text-muted)' }}>Review and manage pending membership applications.</p>
+        </div>
+        <div>
+          <button className="btn" style={{ background: 'var(--background)', border: '1px solid var(--border)' }}>
+            Filter Status
+          </button>
         </div>
       </div>
 
-      <div className="card shadow-sm" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
         {error ? (
-          <div style={{ padding: '2rem', color: 'var(--error)' }}>
+          <div style={{ padding: '3rem', color: 'var(--error)', textAlign: 'center' }}>
             Error loading applications: {error.message}
           </div>
         ) : !applications || applications.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📥</div>
             No applications found in the system.
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead style={{ background: 'var(--background)' }}>
+          <table className="table-modern">
+            <thead>
               <tr>
-                <th style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>Date</th>
-                <th style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>Applicant Name</th>
-                <th style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>Association</th>
-                <th style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>Status</th>
-                <th style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>Action</th>
+                <th>Applicant Name</th>
+                <th>Association</th>
+                <th>Date Submitted</th>
+                <th>Status</th>
+                <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {applications.map(app => (
-                <tr key={app.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                    {new Date(app.created_at).toLocaleDateString('en-ZA')}
+                <tr key={app.id}>
+                  <td>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
+                      {app.first_name} {app.last_name}
+                    </div>
                   </td>
-                  <td style={{ padding: '1rem', fontWeight: 500 }}>
-                    {app.first_name} {app.last_name}
-                  </td>
-                  <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{app.association_name}</td>
-                  <td style={{ padding: '1rem' }}>
+                  <td>{app.association_name}</td>
+                  <td>{new Date(app.created_at).toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                  <td>
                     <span className={`status-badge status-${app.status.toLowerCase().replace('_', '-')}`}>
                       {app.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td style={{ padding: '1rem' }}>
-                    <Link href={`/admin/applications/${app.id}`} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.875rem', border: '1px solid var(--border)' }}>
+                  <td style={{ textAlign: 'right' }}>
+                    <Link href={`/admin/applications/${app.id}`} className="btn" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: 'var(--background)', color: 'var(--text-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)' }}>
                       Review
                     </Link>
                   </td>

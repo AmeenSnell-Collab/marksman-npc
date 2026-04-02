@@ -1,35 +1,21 @@
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
-import { redirect } from 'next/navigation';
-import LogoutButton from './LogoutButton';
+import Link from 'next/link';
 
 export default async function MemberDashboard() {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
-  // Get authenticated user
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  if (authError || !user) {
-    redirect('/login');
-  }
-
-  // Fetch user role
-  const { data: dbUser } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-  const isAdmin = dbUser?.role === 'ADMIN';
-
-  // Fetch the user's applications from the database
+  // Fetch applications & membership
   const { data: applications } = await supabase
     .from('applications')
     .select('id, first_name, last_name, status, association_name, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  // Fetch membership info
   const { data: membership } = await supabase
     .from('members')
     .select('member_number, join_date, status')
@@ -39,157 +25,121 @@ export default async function MemberDashboard() {
   const hasApplication = applications && applications.length > 0;
   const latestApp = hasApplication ? applications[0] : null;
 
-  const statusConfig: Record<string, { bg: string; text: string; border: string; label: string }> = {
-    PENDING: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d', label: 'Pending Review' },
-    APPROVED: { bg: '#d1fae5', text: '#047857', border: '#6ee7b7', label: 'Approved' },
-    REJECTED: { bg: '#fee2e2', text: '#b91c1c', border: '#fca5a5', label: 'Rejected' },
-    INFO_REQUESTED: { bg: '#e0f2fe', text: '#0369a1', border: '#7dd3fc', label: 'Info Requested' },
-  };
-
-  const currentStatus = latestApp ? statusConfig[latestApp.status] || statusConfig.PENDING : null;
-
   return (
-    <div className="container animate-fade-in" style={{ padding: '3rem 1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h2>Member Portal</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-            Welcome back, {user.email}
-          </p>
-        </div>
-        <LogoutButton />
+    <div className="animate-fade-in" style={{ maxWidth: '1000px' }}>
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ fontSize: '1.75rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>Welcome Back</h2>
+        <p style={{ color: 'var(--text-muted)' }}>Here is an overview of your membership status.</p>
       </div>
-      
-      {isAdmin && (
-        <div className="card shadow-sm" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1.5rem', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ margin: 0, color: '#0f172a' }}>Administrator Portal</h3>
-            <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>Access tools to review, approve, and manage member applications.</p>
-          </div>
-          <a href="/admin/applications" className="btn btn-primary" style={{ background: '#0f172a', fontWeight: 600 }}>
-            Manage Applications →
-          </a>
-        </div>
-      )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         
-        {/* Application Status Widget */}
-        <div className="card border-primary">
-          <h3 style={{ marginBottom: '1rem' }}>Application Status</h3>
+        {/* Profile / Membership Card */}
+        <div className="card card-hover" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Membership Profile
+            </h3>
+            {membership ? (
+              <span className="status-badge status-approved">ACTIVE</span>
+            ) : (
+              <span className="status-badge status-pending">PENDING</span>
+            )}
+          </div>
           
-          {latestApp && currentStatus ? (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ 
-              padding: '1.5rem', 
-              background: currentStatus.bg, 
-              borderRadius: 'var(--radius-md)', 
-              border: `1px solid ${currentStatus.border}` 
+              width: '80px', height: '80px', borderRadius: '24px', 
+              background: 'linear-gradient(135deg, var(--background) 0%, var(--border) 100%)', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              fontSize: '2rem', marginBottom: '1rem', color: 'var(--primary)' 
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong style={{ color: currentStatus.text, fontSize: '1.1rem' }}>
-                  {currentStatus.label.toUpperCase()}
-                </strong>
-                <span className={`status-badge status-${latestApp.status.toLowerCase().replace('_', '-')}`}>
-                  {currentStatus.label}
-                </span>
+              👤
+            </div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>
+              {latestApp ? `${latestApp.first_name} ${latestApp.last_name}` : user.email}
+            </h2>
+            <p style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '1.1rem' }}>
+              {membership ? membership.member_number : 'Awaiting Number'}
+            </p>
+          </div>
+          
+          {membership && (
+            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Join Date</span>
+              <span style={{ fontWeight: 500 }}>{new Date(membership.join_date).toLocaleDateString('en-ZA')}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Status Indicator Card */}
+        <div className="card card-hover" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <h3 style={{ fontSize: '1.1rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.5rem' }}>
+            Application Status
+          </h3>
+
+          {!latestApp ? (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>No application history found.</p>
+              <Link href="/apply" className="btn btn-primary" style={{ width: '100%' }}>
+                Start New Application
+              </Link>
+            </div>
+          ) : (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '1rem', background: 'var(--background)', borderRadius: 'var(--radius-md)', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Status</span>
+                  <span className={`status-badge status-${latestApp.status.toLowerCase().replace('_', '-')}`}>
+                    {latestApp.status.replace('_', ' ')}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Submitted</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{new Date(latestApp.created_at).toLocaleDateString('en-ZA')}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Association</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{latestApp.association_name}</span>
+                </div>
               </div>
-              <p style={{ marginTop: '0.75rem', color: currentStatus.text, fontSize: '0.9rem' }}>
-                Application for <strong>{latestApp.first_name} {latestApp.last_name}</strong> — {latestApp.association_name}
-              </p>
-              <p style={{ marginTop: '0.25rem', color: currentStatus.text, fontSize: '0.8rem', opacity: 0.7 }}>
-                Submitted: {new Date(latestApp.created_at).toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
 
               {latestApp.status === 'APPROVED' && !membership && (
-                <div style={{ 
-                  marginTop: '1.5rem', 
-                  background: '#ffffff', 
-                  padding: '1.5rem', 
-                  borderRadius: 'var(--radius-md)', 
-                  border: '1px solid var(--border)',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '1.5rem' }}>💳</span>
-                    <h4 style={{ margin: 0, color: 'var(--text)' }}>Action Required: Complete Registration</h4>
-                  </div>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
-                    Congratulations! Your application has been approved by our administrators. 
-                    To instantly activate your membership and receive your official Member Number, please proceed to the secure payment portal.
-                  </p>
-                  <a 
-                    href={`/payment?appId=${latestApp.id}`} 
-                    className="btn btn-primary" 
-                    style={{ display: 'inline-block', textDecoration: 'none', background: '#0f172a', fontWeight: 600 }}
-                  >
-                    Proceed to Payment Center →
-                  </a>
-                </div>
+                 <div style={{ marginTop: 'auto', background: 'var(--primary)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', color: 'white' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                     <span style={{ fontSize: '1.25rem' }}>💳</span>
+                     <h4 style={{ margin: 0, color: 'white' }}>Final Step: Payment</h4>
+                   </div>
+                   <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', marginBottom: '1.25rem' }}>
+                     Your application is approved. Pay the registration fee to instantly activate your membership.
+                   </p>
+                   <Link href={`/payment?appId=${latestApp.id}`} className="btn" style={{ width: '100%', background: 'white', color: 'var(--primary)', fontWeight: 600 }}>
+                     Proceed to Payment
+                   </Link>
+                 </div>
               )}
-            </div>
-          ) : (
-            <div style={{ 
-              padding: '2rem', 
-              background: 'var(--background)', 
-              borderRadius: 'var(--radius-md)', 
-              border: '2px dashed var(--border)', 
-              textAlign: 'center' 
-            }}>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                You haven&apos;t submitted an application yet.
-              </p>
-              <a href="/apply" className="btn btn-primary">Start Application</a>
+              
             </div>
           )}
         </div>
-
-        {/* Membership Info Widget */}
-        <div className="card">
-          <h3 style={{ marginBottom: '1rem' }}>Membership Info</h3>
-          {membership ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--background)', borderRadius: 'var(--radius-sm)' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Member #</span>
-                <strong>{membership.member_number}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--background)', borderRadius: 'var(--radius-sm)' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Joined</span>
-                <strong>{new Date(membership.join_date).toLocaleDateString('en-ZA')}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--background)', borderRadius: 'var(--radius-sm)' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Status</span>
-                <span className="status-badge status-approved">{membership.status}</span>
-              </div>
-            </div>
-          ) : (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              Membership details will appear here once your application is approved.
-            </p>
-          )}
-        </div>
-
-        {/* Quick Links Widget */}
-        <div className="card">
-          <h3 style={{ marginBottom: '1rem' }}>Account Actions</h3>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {!hasApplication && (
-              <li>
-                <a href="/apply" style={{ display: 'block', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', textDecoration: 'none', color: 'inherit', transition: 'border-color 0.2s' }}>
-                  <strong style={{ display: 'block' }}>Submit Application</strong>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Apply for membership at Marksman NPC</span>
-                </a>
-              </li>
-            )}
-            <li>
-              <a href="/apply" style={{ display: 'block', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', textDecoration: 'none', color: 'inherit', transition: 'border-color 0.2s' }}>
-                <strong style={{ display: 'block' }}>Manage Documents</strong>
-                <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Upload required proofs or ID</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        
       </div>
+
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.1rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Quick Actions
+          </h3>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+          <Link href="/apply" className="btn" style={{ background: 'var(--background)', color: 'var(--text-main)', border: '1px solid var(--border)', justifyContent: 'flex-start', padding: '1rem' }}>
+             📄 Update Documents
+          </Link>
+          <button className="btn" style={{ background: 'var(--background)', color: 'var(--text-muted)', border: '1px solid var(--border)', justifyContent: 'flex-start', padding: '1rem', cursor: 'not-allowed' }}>
+             ⚙️ Settings (Soon)
+          </button>
+        </div>
+      </div>
+
     </div>
   );
 }
