@@ -68,17 +68,17 @@ export default function AdminActions({ applicationId, initialStatus, initialNote
             <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.4rem' }}>
               Document Verification Checklist
             </label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input type="checkbox" checked={chkId} onChange={(e) => setChkId(e.target.checked)} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={chkId} onChange={(e) => setChkId(e.target.checked)} style={{ width: 'auto', margin: 0 }} />
                 <span>Copy of ID</span>
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input type="checkbox" checked={chkAddress} onChange={(e) => setChkAddress(e.target.checked)} />
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={chkAddress} onChange={(e) => setChkAddress(e.target.checked)} style={{ width: 'auto', margin: 0 }} />
                 <span>Proof of Address</span>
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input type="checkbox" checked={chkMembership} onChange={(e) => setChkMembership(e.target.checked)} />
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '0.75rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={chkMembership} onChange={(e) => setChkMembership(e.target.checked)} style={{ width: 'auto', margin: 0 }} />
                 <span>Proof of membership to professional body</span>
               </label>
             </div>
