@@ -18,7 +18,7 @@ export default async function AdminApplicationsPage() {
   const { data: applications, error } = await supabase
     .from('applications')
     .select('id, first_name, last_name, association_name, status, created_at')
-    .in('status', ['PENDING', 'AWAITING_PAYMENT'])
+    .in('status', ['PENDING', 'AWAITING_PAYMENT', 'INFO_REQUESTED'])
     .order('created_at', { ascending: false });
 
   return (

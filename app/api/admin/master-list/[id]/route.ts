@@ -19,7 +19,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     if (dbUser?.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await request.json();
-    const { action, reason } = body;
+    const { action, reason, targetStatus: newStatus, details } = body;
 
     let targetStatus = null;
     let auditActionType = '';
@@ -28,8 +28,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       targetStatus = 'REJECTED';
       auditActionType = 'MEMBERSHIP_CANCELLED';
     } else if (action === 'CHANGE') {
-      // General status edit, perhaps INFO_REQUESTED
-      targetStatus = 'INFO_REQUESTED';
+      targetStatus = newStatus || 'INFO_REQUESTED';
       auditActionType = 'MEMBER_STATUS_CHANGED';
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
@@ -48,9 +47,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
     if (auditError) throw auditError;
 
     // 2. Update Application Table
+    let updatePayload: any = { status: targetStatus, updated_at: new Date().toISOString() };
+    if (action === 'CHANGE' && details) {
+      updatePayload = { ...updatePayload, ...details };
+    }
+
     const { error: updateError } = await supabase
       .from('applications')
-      .update({ status: targetStatus, updated_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq('id', params.id);
 
     if (updateError) throw updateError;

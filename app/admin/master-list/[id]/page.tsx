@@ -90,7 +90,7 @@ export default async function MasterListDetail({ params }: { params: { id: strin
              </div>
           </div>
           
-          <MasterListActions applicationId={application.id} currentStatus={application.status} userId={user.id} />
+          <MasterListActions application={application} userId={user.id} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
