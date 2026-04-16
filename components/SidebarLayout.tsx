@@ -69,6 +69,9 @@ export default function SidebarLayout({ children, userEmail, memberNumber, isAdm
               <Link href="/admin/applications" className="sidebar-link">
                 Applications
               </Link>
+              <Link href="/admin/master-list" className="sidebar-link">
+                Master List (All Users)
+              </Link>
             </>
           )}
         </nav>
