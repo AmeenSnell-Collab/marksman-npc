@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-export default async function AdminApplicationsPage() {
+export default async function MasterListPage() {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
@@ -14,19 +14,18 @@ export default async function AdminApplicationsPage() {
   const { data: dbUser } = await supabase.from('users').select('role').eq('id', user.id).single();
   if (dbUser?.role !== 'ADMIN') redirect('/dashboard');
 
-  // Fetch only active applications in the pipeline
+  // Fetch all applications
   const { data: applications, error } = await supabase
     .from('applications')
     .select('id, first_name, last_name, association_name, status, created_at')
-    .in('status', ['PENDING', 'AWAITING_PAYMENT'])
     .order('created_at', { ascending: false });
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1200px' }}>
       <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>Application Pipeline</h2>
-          <p style={{ color: 'var(--text-muted)' }}>Review and manage active applications requiring attention.</p>
+          <h2 style={{ fontSize: '1.75rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>Master List</h2>
+          <p style={{ color: 'var(--text-muted)' }}>Global view of all applications across all statuses with auditing capabilities.</p>
         </div>
       </div>
 
@@ -37,8 +36,8 @@ export default async function AdminApplicationsPage() {
           </div>
         ) : !applications || applications.length === 0 ? (
           <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📥</div>
-            No pending applications in the pipeline.
+            <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>🗃️</div>
+            No applications found in the system.
           </div>
         ) : (
           <table className="table-modern">
@@ -70,8 +69,8 @@ export default async function AdminApplicationsPage() {
                     </span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <Link href={`/admin/applications/${app.id}`} className="btn" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: 'var(--background)', color: 'var(--text-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)' }}>
-                      Review
+                    <Link href={`/admin/master-list/${app.id}`} className="btn" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: '#f1f5f9', color: 'var(--text-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)' }}>
+                      Inspect / Edit
                     </Link>
                   </td>
                 </tr>

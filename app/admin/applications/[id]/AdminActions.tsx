@@ -15,6 +15,14 @@ export default function AdminActions({ applicationId, initialStatus, initialNote
   const [status, setStatus] = useState(initialStatus);
   const [notes, setNotes] = useState(initialNotes || '');
 
+  // Verification Checklist State
+  const [chkId, setChkId] = useState(false);
+  const [chkAddress, setChkAddress] = useState(false);
+  const [chkMembership, setChkMembership] = useState(false);
+
+  // All must be true to approve
+  const canApprove = chkId && chkAddress && chkMembership;
+
   const updateStatus = async (newStatus: string) => {
     setLoading(true);
     try {
@@ -53,30 +61,63 @@ export default function AdminActions({ applicationId, initialStatus, initialNote
       border: '1px solid var(--border)',
       zIndex: 20
     }}>
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
         
-        <div style={{ flex: 2 }}>
+        {!['APPROVED', 'AWAITING_PAYMENT'].includes(status) && (
+          <div style={{ flex: '1 1 250px' }}>
+            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.4rem' }}>
+              Document Verification Checklist
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={chkId} onChange={(e) => setChkId(e.target.checked)} />
+                <span>Copy of ID</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={chkAddress} onChange={(e) => setChkAddress(e.target.checked)} />
+                <span>Proof of Address</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={chkMembership} onChange={(e) => setChkMembership(e.target.checked)} />
+                <span>Proof of membership to professional body</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        <div style={{ flex: '1 1 300px' }}>
           <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
             Administrator Notes (Optional)
           </label>
           <textarea 
-            rows={2} 
+            rows={!['APPROVED', 'AWAITING_PAYMENT'].includes(status) ? 4 : 2} 
             placeholder="Feedback saved for internal review, or sent to user if info is requested."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             style={{ resize: 'none', background: 'var(--background)' }}
+            disabled={loading}
           ></textarea>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', justifyContent: 'flex-end', paddingTop: '1.75rem' }}>
-          {status !== 'APPROVED' && (
+        <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.75rem', justifyContent: 'center' }}>
+          {!['APPROVED', 'AWAITING_PAYMENT'].includes(status) && (
             <button 
               className="btn btn-primary" 
-              style={{ background: 'var(--success)', border: 'none', width: '100%' }}
-              onClick={() => updateStatus('APPROVED')}
-              disabled={loading}
+              style={{ 
+                background: canApprove ? 'var(--success)' : '#cbd5e1', 
+                border: 'none', 
+                width: '100%',
+                cursor: canApprove ? 'pointer' : 'not-allowed'
+              }}
+              onClick={() => {
+                // Here we would also trigger the email sending process to the user
+                console.log('TODO: Send Payment Link Email to User');
+                updateStatus('AWAITING_PAYMENT');
+              }}
+              disabled={loading || !canApprove}
+              title={!canApprove ? 'Please verify all documents in the checklist first' : ''}
             >
-              Approve Application
+              Approve & Request Payment
             </button>
           )}
 
